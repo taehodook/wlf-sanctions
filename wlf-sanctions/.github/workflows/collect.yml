@@ -1,0 +1,115 @@
+name: 제재명단 수집
+
+on:
+  schedule:
+    # 매일 00:00 UTC = 09:00 KST
+    # 주의: GitHub Actions cron은 부하에 따라 수 분~수십 분 지연될 수 있습니다(정시 보장 아님).
+    - cron: '0 0 * * *'
+  workflow_dispatch:        # 폰에서 수동 실행("Run workflow" 버튼)
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'manual/**'          # KoFIU 고시 파일을 새로 올리면 즉시 재수집
+      - '.github/workflows/collect.yml'
+
+permissions:
+  contents: write           # 수집 결과를 저장소에 커밋하기 위해 필요
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 의존성 설치
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 수집 및 사이트 데이터 빌드
+        id: build
+        # KoFIU는 게시판이 AJAX로 바뀌어 스크레이핑이 불가하므로 수동 반입 방식입니다.
+        # manual/ 에 고시 첨부파일(xlsx/csv)을 커밋해 두면 자동으로 인식합니다.
+        # 파일이 없으면 KoFIU만 건너뛰고 나머지 출처로 계속 진행합니다.
+        run: PYTHONPATH=src python src/build_site.py
+
+      - name: 원본 스냅샷 보관 (감사증적, 90일)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-snapshot-${{ github.run_number }}
+          path: raw/
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: 변경사항 커밋
+        run: |
+          git config user.name  "sanctions-bot"
+          git config user.email "actions@github.com"
+          git add docs/data
+          if git diff --staged --quiet; then
+            echo "변동 없음 — 커밋 생략"
+            exit 0
+          fi
+          SUMMARY=$(python -c "import json;m=json.load(open('docs/data/meta.json',encoding='utf-8'));c=m['last_change'];print('총 %d건 (신규 +%d / 삭제 -%d / 변경 ~%d)' % (m['total'],c['added'],c['removed'],c['modified']))")
+          git commit -m "데이터 갱신: $(date -u -d '+9 hours' '+%Y.%m.%d.') — ${SUMMARY}"
+          git push
+
+      - name: 실패 시 이슈 생성
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `수집 실패 — ${new Date().toISOString().slice(0, 10)}`;
+            const body = [
+              '자동 수집 워크플로가 실패했습니다.',
+              '',
+              `- 실행 로그: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              '점검 순서:',
+              '1. 로그에서 어느 소스가 실패했는지 확인 (OFAC / EU / UNSC / KoFIU)',
+              '2. OFAC·EU·UNSC 실패 시 → 엔드포인트 이관 여부 확인 (각 수집기의 CANDIDATE_URLS / URL)',
+              '3. KoFIU 미반영은 실패가 아님 → manual/ 에 최신 고시 파일이 있는지 확인',
+              '4. XML 파싱 실패 시 → 배포처가 네임스페이스를 바꿨을 수 있음 (_ns_of 자동추출이므로 태그명 확인)',
+              '5. 서킷브레이커(exit 2) 작동 시 → 대량 삭제 오탐이므로 파서 점검 후 재실행',
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title, body,
+              labels: ['수집실패'],
+            });
+
+  deploy:
+    needs: collect
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4

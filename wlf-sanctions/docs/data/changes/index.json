@@ -1,0 +1,31 @@
+[
+ {
+  "date": "2026-07-29",
+  "added": 27248,
+  "removed": 0,
+  "modified": 0,
+  "total": 27249,
+  "by_source": {
+   "EU": {
+    "added": 6017,
+    "removed": 0,
+    "modified": 0
+   },
+   "KoFIU": {
+    "added": 1063,
+    "removed": 0,
+    "modified": 0
+   },
+   "OFAC": {
+    "added": 19157,
+    "removed": 0,
+    "modified": 0
+   },
+   "UNSC": {
+    "added": 1011,
+    "removed": 0,
+    "modified": 0
+   }
+  }
+ }
+]
