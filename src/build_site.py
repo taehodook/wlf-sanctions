@@ -5,7 +5,7 @@ build_site.py
 
 GitHub Actions가 매일 실행하는 진입점입니다.
 
-산출물 (docs/data/)
+산출물 (data/)
 ------------------
     meta.json               생성시각, 출처별 건수, 최근 변경일
     index.json              슬림 인덱스 (배열의 배열 — 용량 최소화)
@@ -42,7 +42,7 @@ LOGGER = logging.getLogger("sanctions.build")
 
 KST = timezone(timedelta(hours=9))
 
-DATA_DIR = os.path.join("docs", "data")
+DATA_DIR = "data"
 DETAIL_DIR = os.path.join(DATA_DIR, "detail")
 CHANGES_DIR = os.path.join(DATA_DIR, "changes")
 
