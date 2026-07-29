@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-07-29T10:58:47+09:00",
- "generated_at_kst": "2026.07.29. 10:58",
+ "generated_at": "2026-07-29T18:01:59+09:00",
+ "generated_at_kst": "2026.07.29. 18:01",
  "total": 27249,
  "by_source": {
   "OFAC": 19157,
@@ -10,10 +10,10 @@
  },
  "stale_sources": [],
  "last_change": {
-  "added": 27248,
+  "added": 0,
   "removed": 0,
   "modified": 0,
-  "total_before": 0,
+  "total_before": 27248,
   "total_after": 27249
  },
  "source_status": [
