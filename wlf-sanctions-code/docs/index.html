@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="ko" class="">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=960">
+<title>WLF 제재명단 통합 조회</title>
+<meta name="description" content="OFAC·EU·UN 안보리·KoFIU 제재명단을 매일 자동 수집·정규화하여 조회·통계·변경이력을 제공하는 WLF 지원 플랫폼">
+<meta property="og:type" content="website">
+<meta property="og:title" content="WLF 제재명단 통합 조회">
+<meta property="og:description" content="OFAC·EU·UN 안보리·KoFIU 제재명단 통합 조회 · 통계 · 변경이력">
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B1526">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WLF 제재명단">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>@import url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css");</style>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<style>
+/* ============================================================
+   VARIABLES — Design Tokens (AML 국가위험평가 서비스 계승)
+   ============================================================ */
+:root {
+  --font:'Paperlogy',-apple-system,'Malgun Gothic',sans-serif;
+  --mono:'JetBrains Mono','Paperlogy',monospace;
+  /* Console (ink navy) — header & banner */
+  --ink:#0B1526; --ink-bd:rgba(148,163,184,.16);
+  --ink-tx:#FFFFFF; --ink-mut:#8DA2BF; --ink-dim:#66799B;
+  --accent:#4C8DFF;
+  /* Surface */
+  --bg:#F8FAFC; --surface:#FFFFFF;
+  /* Brand */
+  --blue:#2563EB; --blue-h:#1D4ED8; --blue-subtle:#EFF6FF; --blue-light:#BFDBFE;
+  /* Text */
+  --tx-1:#0F172A; --tx-2:#475569; --tx-3:#94A3B8;
+  /* Border */
+  --bd:#E2E8F0; --bd-sub:#F1F5F9;
+  /* Status */
+  --red:#DC2626;   --red-bg:#FEF2F2;
+  --orange:#D97706; --orange-bg:#FFFBEB;
+  --yellow:#CA8A04; --yellow-bg:#FEFCE8;
+  --green:#16A34A; --green-bg:#F0FDF4;
+  --purple:#7C3AED; --purple-bg:#F5F3FF;
+  /* EU 출처용. 초록은 "정상 갱신" 상태 의미로 예약되어 있어 색이 겹치면 안 됩니다. */
+  --teal:#0D9488; --teal-bg:#F0FDFA;
+  /* Shadow */
+  --sh-xs:0 1px 2px rgba(0,0,0,.04);
+  --sh-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03);
+  --sh-lg:0 10px 15px -3px rgba(0,0,0,.06),0 4px 6px -2px rgba(0,0,0,.03);
+  /* Radius */
+  --r-sm:6px; --r-md:8px; --r-lg:12px;
+}
+.dark {
+  --bg:#0D1117; --surface:#161B22;
+  --tx-1:#E6EDF3; --tx-2:#C9D1D9; --tx-3:#6E7681;
+  --bd:#30363D; --bd-sub:#21262D;
+  --red-bg:#3b1212;   --orange-bg:#2d1e07;
+  --yellow-bg:#2d2700; --green-bg:#122d1a;
+  --purple-bg:#1f1235; --blue-subtle:#0d1f3c; --blue-light:#1e3a5f;
+  --teal-bg:#07302b;
+}
+
+/* ── RESET ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--font);font-size:14px;
+  color:var(--tx-1);background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  transition:background .2s,color .2s;
+  line-height:1.5;word-break:keep-all;
+}
+.no-transition *,.no-transition *::before,.no-transition *::after{transition:none!important;}
+[data-lucide]{display:inline-block;vertical-align:middle;flex-shrink:0;}
+button{font-family:inherit;}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px;}
+
+/* ── 탭 ── */
+.tab-btn{
+  background:none;border:none;cursor:pointer;
+  padding:8px 14px;font-size:13px;font-weight:500;
+  color:var(--tx-3);white-space:nowrap;letter-spacing:-.01em;
+  border-bottom:2px solid transparent;transition:color .15s;
+}
+.tab-btn.active{border-bottom:2px solid var(--blue);color:var(--blue);font-weight:600;}
+.tab-btn:hover:not(.active){color:var(--tx-2);background:var(--bd-sub);}
+.dark .tab-btn{color:#484f58;}
+.dark .tab-btn:hover{color:var(--tx-2);}
+.dark .tab-btn.active{color:#60a5fa;border-color:#60a5fa;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ── 배지 ── */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 7px;border-radius:4px;
+  font-size:11px;font-weight:500;white-space:nowrap;
+}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.badge-red   {background:var(--red-bg);   color:var(--red);}
+.badge-red::before   {background:var(--red);}
+.badge-orange{background:var(--orange-bg);color:var(--orange);}
+.badge-orange::before{background:var(--orange);}
+.badge-green {background:var(--green-bg); color:var(--green);}
+.badge-green::before {background:var(--green);}
+.badge-blue  {background:var(--blue-subtle);color:var(--blue);}
+.badge-blue::before  {background:var(--blue);}
+.badge-purple{background:var(--purple-bg);color:var(--purple);}
+.badge-purple::before{background:var(--purple);}
+.badge-teal  {background:var(--teal-bg);  color:var(--teal);}
+.badge-teal::before  {background:var(--teal);}
+.badge-gray  {background:var(--bd-sub);   color:var(--tx-2);}
+.badge-gray::before  {background:var(--tx-3);}
+
+/* ── 콘솔 배너 + 헤더 ── */
+.notice-banner{
+  background:var(--ink);color:var(--ink-mut);
+  font-family:var(--mono);font-size:10.5px;font-weight:400;
+  letter-spacing:.08em;padding:6px 16px;text-align:center;
+  border-bottom:1px solid var(--ink-bd);
+}
+header#console-header{
+  background:var(--ink)!important;
+  border-bottom:1px solid var(--ink-bd)!important;
+}
+.hd-logo{
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  background:linear-gradient(135deg,#2563EB,#4C8DFF);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08),0 2px 10px rgba(37,99,235,.4);
+}
+.hd-title{font-size:14.5px;font-weight:700;color:var(--ink-tx);letter-spacing:-.01em;line-height:1.2;}
+.hd-sub{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink-mut);letter-spacing:.16em;text-transform:uppercase;margin-top:1px;}
+.hide-scrollbar::-webkit-scrollbar{display:none;}
+
+/* ── 카드 ── */
+.card{
+  background:var(--surface);border:1px solid var(--bd);
+  border-radius:var(--r-lg);box-shadow:var(--sh-sm);
+}
+.card-h{
+  font-size:13px;font-weight:600;color:var(--tx-1);
+  display:flex;align-items:center;gap:6px;
+}
+.info-card{border-left:3px solid var(--blue);}
+
+/* ── 필터 버튼 ── */
+.fb{
+  border:1px solid var(--bd);border-radius:var(--r-sm);
+  padding:4px 10px;font-size:12px;font-weight:500;
+  background:var(--surface);color:var(--tx-2);
+  cursor:pointer;transition:all .12s;
+}
+.fb:hover{background:var(--bd-sub);color:var(--tx-1);}
+.fb.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.dark .fb{background:var(--surface);border-color:var(--bd);color:var(--tx-2);}
+.dark .fb.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+/* ── 세그먼트 바 / 분포 카드 ── */
+.seg-bar{display:flex;height:24px;border-radius:var(--r-sm);overflow:hidden;width:100%;}
+.seg-bar-item{transition:flex .4s,filter .12s;cursor:pointer;}
+.seg-bar-item:hover{filter:brightness(1.08);}
+.grade-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px;}
+.grade-card{
+  border-radius:var(--r-md);padding:10px 8px;text-align:center;
+  border:1px solid transparent;cursor:pointer;transition:transform .12s,box-shadow .12s;
+}
+.grade-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md);}
+.grade-card .gc-num{font-size:22px;font-weight:700;line-height:1;letter-spacing:-.03em;font-family:var(--mono);}
+.grade-card .gc-pct{font-size:11px;opacity:.65;margin-top:2px;font-family:var(--mono);}
+.grade-card .gc-lbl{font-size:11px;font-weight:600;margin-top:3px;}
+
+/* ── 변경 캘린더(와플) ── */
+.waffle{display:grid;grid-template-columns:repeat(auto-fill,minmax(13px,1fr));gap:3px;}
+.waffle-cell{
+  aspect-ratio:1;border-radius:2px;cursor:pointer;
+  transition:transform .1s,box-shadow .1s;
+}
+.waffle-cell:hover{transform:scale(1.4);box-shadow:0 1px 4px rgba(0,0,0,.25);position:relative;z-index:2;}
+.waffle.has-active .waffle-cell{opacity:.14;}
+.waffle.has-active .waffle-cell.on{opacity:1;}
+
+/* ── 수집 상태 ── */
+.src-status{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.ss-item{
+  border:1px solid var(--bd);border-radius:var(--r-md);
+  padding:10px 12px;background:var(--bg);
+}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;}
+
+/* ── 출처 카드 ── */
+.src-card{
+  display:flex;border-radius:var(--r-lg);overflow:hidden;
+  border:1px solid var(--bd);background:var(--surface);
+  box-shadow:var(--sh-sm);transition:box-shadow .15s,transform .15s;
+}
+.src-card:hover{box-shadow:var(--sh-md);transform:translateY(-1px);}
+.src-card-body{flex:1;padding:16px 20px;min-width:0;overflow:hidden;}
+.src-card-link{
+  display:flex;align-items:center;justify-content:center;
+  border-left:1px solid var(--bd);
+  padding:12px 8px;text-align:center;flex-shrink:0;width:96px;
+}
+.src-card-link a{font-weight:600;font-size:12px;color:var(--blue);text-decoration:none;}
+.src-card-link a:hover{text-decoration:underline;}
+
+/* ── 테이블 ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table.dt{width:100%;border-collapse:collapse;font-size:13px;}
+table.dt th{
+  font-size:11px;font-weight:600;color:var(--tx-3);text-align:left;
+  padding:8px 12px;border-bottom:1px solid var(--bd);white-space:nowrap;
+  background:var(--bd-sub);letter-spacing:.02em;
+}
+table.dt td{padding:9px 12px;border-bottom:1px solid var(--bd-sub);vertical-align:middle;}
+.dark table.dt td{border-bottom-color:var(--bd);}
+table.dt tbody tr{cursor:pointer;transition:background .1s;}
+table.dt tbody tr:hover td{background:var(--blue-subtle);}
+.dark table.dt tbody tr:hover td{background:#1c2128;}
+.nm{font-weight:600;color:var(--tx-1);}
+.al{font-size:11px;color:var(--tx-3);margin-top:1px;}
+
+/* ── 타임라인 ── */
+.timeline-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd-sub);}
+.dark .timeline-item{border-bottom-color:var(--bd);}
+
+/* ── 모달 ── */
+.modal-ov{
+  display:none;position:fixed;inset:0;z-index:60;
+  background:rgba(0,0,0,.5);
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-ov.open{display:flex;}
+.factor-row{
+  display:flex;gap:12px;
+  padding:6px 0;border-bottom:1px solid var(--bd-sub);font-size:13px;
+}
+.dark .factor-row{border-bottom-color:var(--bd);}
+.factor-row dt{
+  font-family:var(--mono);font-size:10.5px;color:var(--tx-3);
+  letter-spacing:.06em;text-transform:uppercase;flex:0 0 92px;padding-top:3px;
+}
+.factor-row dd{flex:1;min-width:0;color:var(--tx-1);}
+
+/* ── 툴팁 ── */
+#tt{
+  position:fixed;display:none;z-index:80;pointer-events:none;
+  background:#09090B;color:#fff;
+  padding:8px 12px;border-radius:var(--r-md);
+  font-size:12px;max-width:280px;
+  box-shadow:var(--sh-lg);border:1px solid #18181B;
+}
+
+/* ── 모노 숫자 ── */
+.mono,.gc-num,.gc-pct,#tbl-cnt,.kpi-num,.ss-date{
+  font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
+}
+
+/* ── 다크 보정 ── */
+.dark .bg-white{background:var(--surface)!important;}
+.dark input{background:#21262d;border-color:var(--bd);color:var(--tx-1);}
+.dark input::placeholder{color:#484f58;}
+.dark #dark-toggle{border-color:var(--ink-bd);}
+
+@media print{
+  .notice-banner,#dark-toggle,#tt{display:none!important;}
+  .tab-content{display:block!important;}
+  body{background:#fff!important;color:#000!important;}
+  .card{break-inside:avoid;box-shadow:none;border-color:#999;}
+}
+</style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+
+<!-- 공지 배너 -->
+<div class="notice-banner">
+  OFAC · EU · UN 안보리 공개 명단 자동 수집 — 매일 09:00 KST 갱신
+</div>
+
+<!-- 헤더 -->
+<header id="console-header" style="position:sticky;top:0;z-index:50;">  <div class="max-w-screen-xl mx-auto px-4 sm:px-6" style="display:flex;align-items:center;height:54px;gap:16px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <div class="hd-logo"><i data-lucide="scan-search" style="width:15px;height:15px;color:#fff;"></i></div>
+      <div>
+        <div class="hd-title">WLF 제재명단 통합</div>
+        <div class="hd-sub">Sanctions Watchlist</div>
+      </div>
+    </div>
+
+    <nav style="display:flex;align-items:center;overflow-x:auto;flex:1;scrollbar-width:none;" class="hide-scrollbar">
+      <button class="tab-btn active" onclick="switchTab(event,'overview')" style="display:flex;align-items:center;gap:5px;">
+        <i data-lucide="layout-dashboard" style="width:13px;height:13px;"></i>전체 현황
+      </button>
+      <button class="tab-btn" onclick="switchTab(event,'list')" style="display:flex;align-items:center;gap:5px;">
+        <i data-lucide="list" style="width:13px;height:13px;"></i>명단 조회
+      </button>
+      <button class="tab-btn" onclick="switchTab(event,'stats')" style="display:flex;align-items:center;gap:5px;">
+        <i data-lucide="bar-chart-2" style="width:13px;height:13px;"></i>통계 인사이트
+      </button>
+      <button class="tab-btn" onclick="switchTab(event,'changes')" style="display:flex;align-items:center;gap:5px;">
+        <i data-lucide="git-compare-arrows" style="width:13px;height:13px;"></i>변경 이력
+      </button>
+      <button class="tab-btn" onclick="switchTab(event,'sources')" style="display:flex;align-items:center;gap:5px;">
+        <i data-lucide="book-open" style="width:13px;height:13px;"></i>출처
+      </button>
+    </nav>
+
+    <button id="dark-toggle" onclick="toggleDark()" title="다크/라이트 모드"
+      style="flex-shrink:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+             border:1px solid var(--ink-bd);border-radius:var(--r-md);background:transparent;
+             color:var(--ink-mut);cursor:pointer;transition:all .15s;">
+      <i id="dark-icon" data-lucide="moon" style="width:14px;height:14px;"></i>
+    </button>
+  </div>
+</header>
+
+<div id="demo-banner" style="display:none;background:var(--orange-bg);border-bottom:1px solid var(--orange);">
+  <div class="max-w-screen-xl mx-auto px-4 sm:px-6" style="padding:8px 0;display:flex;align-items:center;gap:8px;">
+    <i data-lucide="alert-triangle" style="width:13px;height:13px;color:var(--orange);flex-shrink:0;"></i>
+    <span style="font-size:11.5px;color:var(--orange);word-break:keep-all;">
+      데모 데이터입니다. 실제 수집 결과가 아니므로 업무에 사용하지 마십시오. (data/*.json 로드 실패)
+    </span>
+  </div>
+</div>
+
+<div id="tt"></div>
+
+<!-- ══════════ 전체 현황 ══════════ -->
+<div id="tab-overview" class="tab-content active max-w-screen-xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5" id="kpis"></div>
+
+  <div class="card mb-5" style="padding:16px 20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h2 class="card-h"><i data-lucide="database" style="width:14px;height:14px;color:var(--blue);"></i>수집 상태</h2>
+      <span style="font-size:11px;color:var(--tx-3);">각 기관 최종 갱신일 · 7일 초과 시 지연 표시</span>
+    </div>
+    <div class="src-status" id="src-status"></div>
+  </div>
+
+  <div class="card mb-5" style="padding:16px 20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h2 class="card-h"><i data-lucide="pie-chart" style="width:14px;height:14px;color:var(--blue);"></i>출처 구성</h2>
+      <span style="font-size:11px;color:var(--tx-3);">카드 클릭 시 해당 출처로 명단 조회</span>
+    </div>
+    <div class="seg-bar" id="seg-src"></div>
+    <div class="grade-cards" id="cards-src" style="grid-template-columns:repeat(3,1fr);"></div>
+  </div>
+
+  <div class="card mb-5" style="padding:16px 20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h2 class="card-h"><i data-lucide="users" style="width:14px;height:14px;color:var(--blue);"></i>대상 유형 분포</h2>
+      <span style="font-size:11px;color:var(--tx-3);">개인·단체 외 선박·항공기도 스크리닝 대상</span>
+    </div>
+    <div class="seg-bar" id="seg-type"></div>
+    <div class="grade-cards" id="cards-type"></div>
+  </div>
+
+  <div class="card mb-5" style="padding:16px 20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h2 class="card-h"><i data-lucide="calendar-days" style="width:14px;height:14px;color:var(--blue);"></i>최근 90일 변경 캘린더</h2>
+      <span style="font-size:11px;color:var(--tx-3);">1칸 = 1일 · 진할수록 변경 多 · 칸 클릭 시 상세</span>
+    </div>
+    <div class="waffle" id="waffle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+      <span class="mono" style="font-size:10px;color:var(--tx-3);letter-spacing:.06em;" id="wf-range"></span>
+      <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--tx-3);">
+        <span>적음</span>
+        <span style="width:11px;height:11px;border-radius:2px;background:var(--bd-sub);border:1px solid var(--bd);"></span>
+        <span style="width:11px;height:11px;border-radius:2px;background:var(--blue-light);"></span>
+        <span style="width:11px;height:11px;border-radius:2px;background:var(--blue);"></span>
+        <span style="width:11px;height:11px;border-radius:2px;background:var(--blue-h);"></span>
+        <span>많음</span>
+      </div>
+    </div>
+    <div id="wf-detail" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="card mb-5" style="padding:16px 20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h2 class="card-h"><i data-lucide="trending-up" style="width:14px;height:14px;color:var(--blue);"></i>총 등재 건수 추이 (12주)</h2>
+      <span class="mono" style="font-size:11px;color:var(--tx-3);" id="trend-delta"></span>
+    </div>
+    <svg id="trend" viewBox="0 0 900 150" preserveAspectRatio="none" style="width:100%;height:150px;display:block;" role="img" aria-label="주별 총 등재 건수 추이"></svg>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;" id="trend-axis"></div>
+  </div>
+
+  <div class="card info-card" style="padding:14px 16px;">
+    <p style="font-size:12px;color:var(--tx-2);line-height:1.7;">
+      본 화면은 3개 기관이 공개한 제재명단을 자동 수집·정규화한 <strong>참고 자료</strong>입니다.
+      기관 간 동일인 병합(Entity Resolution)은 수행하지 않으므로 합계에는 중복이 포함될 수 있으며,
+      실제 고객확인·거래거절 판단은 반드시 각 기관 원본과 사내 WLF 시스템의 판정 결과를 기준으로 하십시오.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════ 명단 조회 ══════════ -->
+<div id="tab-list" class="tab-content max-w-screen-xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+  <div class="card" style="padding:16px 20px;margin-bottom:16px;">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+      <div style="position:relative;flex:1;">
+        <i data-lucide="search" style="width:14px;height:14px;color:var(--tx-3);position:absolute;left:10px;top:50%;transform:translateY(-50%);"></i>
+        <input id="q" type="search" placeholder="이름 · 별칭 · 식별번호로 검색" autocomplete="off"
+          style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--bd);border-radius:var(--r-md);
+                 font-size:13px;background:var(--surface);color:var(--tx-1);outline:none;">
+      </div>
+      <span class="mono" id="tbl-cnt" style="font-size:11px;color:var(--tx-3);white-space:nowrap;"></span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+      <span style="font-size:11px;color:var(--tx-3);margin-right:2px;">출처</span>
+      <span id="fb-src" style="display:flex;gap:6px;"></span>
+      <span style="width:1px;height:16px;background:var(--bd);margin:0 6px;"></span>
+      <span style="font-size:11px;color:var(--tx-3);margin-right:2px;">유형</span>
+      <span id="fb-type" style="display:flex;gap:6px;"></span>
+      <button class="fb" onclick="resetFilter()" style="margin-left:auto;">초기화</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="tbl-wrap">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th style="width:34%;">명칭 / 별칭</th>
+            <th style="width:9%;">출처</th>
+            <th style="width:9%;">유형</th>
+            <th style="width:12%;">국적</th>
+            <th style="width:13%;">생년월일</th>
+            <th style="width:13%;">지정근거</th>
+            <th style="width:10%;">지정일</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="tbl-more" class="mono" style="display:none;padding:10px 14px;border-top:1px solid var(--bd);
+      background:var(--bd-sub);color:var(--tx-3);font-size:11px;text-align:center;"></div>
+    <div id="tbl-empty" style="display:none;padding:40px 16px;text-align:center;color:var(--tx-3);font-size:13px;">
+      조건에 맞는 대상이 없습니다. 검색어를 줄이거나 필터를 해제해 보세요.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ 통계 인사이트 ══════════ -->
+<div id="tab-stats" class="tab-content max-w-screen-xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+  <div class="card mb-4" style="padding:16px 20px;">
+    <h2 class="card-h" style="margin-bottom:12px;"><i data-lucide="globe" style="width:14px;height:14px;color:var(--blue);"></i>국적별 상위 10개국</h2>
+    <div id="bar-nat"></div>
+    <p style="font-size:11px;color:var(--tx-3);margin-top:10px;">국적 미상 건은 집계에서 제외했습니다.</p>
+  </div>
+
+  <div class="card mb-4" style="padding:16px 20px;">
+    <h2 class="card-h" style="margin-bottom:12px;"><i data-lucide="table-2" style="width:14px;height:14px;color:var(--blue);"></i>출처 × 유형 교차표</h2>
+    <div class="tbl-wrap"><table class="dt" id="cross"></table></div>
+  </div>
+
+  <div class="card mb-4" style="padding:16px 20px;">
+    <h2 class="card-h" style="margin-bottom:12px;"><i data-lucide="gavel" style="width:14px;height:14px;color:var(--blue);"></i>지정근거(프로그램) 상위</h2>
+    <div id="bar-prog"></div>
+  </div>
+
+  <div class="card" style="padding:16px 20px;">
+    <h2 class="card-h" style="margin-bottom:12px;"><i data-lucide="calendar-range" style="width:14px;height:14px;color:var(--blue);"></i>지정연도 분포</h2>
+    <div id="bar-year"></div>
+    <p id="year-scope" style="font-size:11px;color:var(--tx-3);margin-top:10px;"></p>
+  </div>
+</div>
+
+<!-- ══════════ 변경 이력 ══════════ -->
+<div id="tab-changes" class="tab-content max-w-screen-xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+  <div style="margin-bottom:16px;">
+    <h2 style="font-size:15px;font-weight:700;color:var(--tx-1);">
+      제재명단 변경 현황 <span class="mono" style="font-size:12px;color:var(--tx-3);font-weight:400;" id="chg-stamp"></span>
+    </h2>
+    <p style="font-size:12px;color:var(--tx-3);margin-top:4px;" id="chg-caption"></p>
+  </div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4" id="chg-kpis"></div>
+
+  <div class="card" style="padding:16px 20px;">
+    <h2 class="card-h" style="margin-bottom:4px;"><i data-lucide="list-checks" style="width:14px;height:14px;color:var(--blue);"></i>일자별 변경 내역</h2>
+    <div id="chg-list" style="margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- ══════════ 출처 ══════════ -->
+<div id="tab-sources" class="tab-content max-w-screen-xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+  <div style="margin-bottom:16px;">
+    <h2 style="font-size:15px;font-weight:700;color:var(--tx-1);">수집 대상 기관</h2>
+    <p style="font-size:12px;color:var(--tx-3);margin-top:4px;">각 기관이 공개하는 원본 파일을 GitHub Actions가 매일 자동 수집합니다.</p>
+  </div>
+  <div id="src-cards" class="space-y-3"></div>
+</div>
+
+<!-- 상세 모달 -->
+<div class="modal-ov" id="detail-modal" onclick="if(event.target===this)closeModal()">
+  <div class="card" style="width:min(560px,92vw);max-height:84vh;overflow-y:auto;padding:20px 24px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px;">
+      <h3 id="dm-name" style="font-size:17px;font-weight:700;color:var(--tx-1);letter-spacing:-.02em;line-height:1.35;"></h3>
+      <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:var(--tx-3);flex-shrink:0;">
+        <i data-lucide="x" style="width:18px;height:18px;"></i>
+      </button>
+    </div>
+    <div id="dm-badges" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+    <dl id="dm-detail" style="border-top:1px solid var(--bd);"></dl>
+  </div>
+</div>
+
+<!-- 푸터 -->
+<footer style="margin-top:40px;padding:16px 20px;border-top:1px solid var(--bd);background:var(--surface);">
+  <div class="max-w-screen-xl mx-auto" style="font-size:11px;color:var(--tx-3);line-height:1.7;text-align:center;">
+    본 서비스의 데이터는 공개 자료를 자동 수집·가공한 것으로, 오류가 포함될 수 있습니다.
+    중요 의사결정 시 반드시 각 기관의 원본 출처를 직접 확인하시기 바랍니다.<br>
+    <span class="mono" style="letter-spacing:.06em;" id="foot-stamp"></span> · 문의: korbono@kakao.com
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   DEMO DATA — 시안용 더미.
+   실데이터 연결 시 loadData()가 data/index.json 을 우선 fetch,
+   실패하면 아래 DEMO로 폴백합니다.
+   ═══════════════════════════════════════════════════════════ */
+const DEMO = {
+  meta: {
+    generated_at: "2026-07-17T09:00:12",
+    sources: [
+      { code:"OFAC",  label:"미국 재무부 OFAC", org:"U.S. Department of the Treasury", list:"SDN List",
+        format:"CSV", cycle:"수시(일 1회 이상)", updated:"2026-07-16", count:17482,
+        url:"https://sanctionslistservice.ofac.treas.gov/", color:"#2563EB" },
+      { code:"KoFIU", label:"금융정보분석원", org:"대한민국 금융위원회 FIU", list:"금융거래제한대상자",
+        format:"Excel", cycle:"수시(지정 고시 시)", updated:"2026-06-30", count:1043,
+        url:"https://www.kofiu.go.kr/ko/info/threat_list.do", color:"#7C3AED" },
+      { code:"UNSC",  label:"UN 안전보장이사회", org:"United Nations Security Council", list:"Consolidated List",
+        format:"XML", cycle:"수시", updated:"2026-07-15", count:1287,
+        url:"https://scsanctions.un.org/resources/xml/en/consolidated.xml", color:"#D97706" }
+    ],
+    delta_7d: { added:14, removed:5, modified:3 },
+    trend: [19602,19640,19655,19661,19688,19702,19715,19740,19758,19771,19790,19812],
+    trend_labels: ["04.27.","05.11.","05.25.","06.08.","06.22.","07.06."],
+    nationality_top: [
+      ["이란",2140],["러시아",1985],["북한",1642],["시리아",1103],["중국",842],
+      ["베네수엘라",731],["미얀마",604],["쿠바",512],["이라크",468],["리비아",396]
+    ],
+    program_top: [
+      ["SDGT (테러자금)",3841],["RUSSIA-EO14024",2764],["IRAN",2210],["DPRK",1502],
+      ["SYRIA",1103],["NPWMD (대량살상무기)",892],["NARCOTICS",640],["CYBER-EO13694",318]
+    ],
+    year_new: [["2020",842],["2021",1104],["2022",3218],["2023",1976],["2024",1540],["2025",1288],["2026",702]],
+    type_dist: [["Individual",8420],["Entity",10104],["Vessel",982],["Aircraft",214],["Unknown",92]],
+    year_scope: ["UNSC"],
+    cross: {
+      OFAC:  { Individual:7000, Entity:9400, Vessel:876, Aircraft:114, Unknown:92 },
+      KoFIU: { Individual:620,  Entity:423,  Vessel:0,   Aircraft:0,   Unknown:0 },
+      UNSC:  { Individual:800,  Entity:281,  Vessel:106, Aircraft:100, Unknown:0 }
+    }
+  },
+  records: [
+    { uid:"12045", source:"OFAC", name:"AL-BARAKA TRADING COMPANY LLC", type:"Entity", nationality:"아랍에미리트", address:"Deira, Dubai, UAE", program:"SDGT", listed_on:"2024-03-11", aliases:["AL BARAKA TRADING CO","ALBARAKA TRD"], remarks:"Linked to procurement network." },
+    { uid:"12046", source:"OFAC", name:"HASSAN MOHAMMED RASHID", type:"Individual", nationality:"이란", birth_date:"1974-03-12", address:"Tehran, Iran", program:"IRGC", listed_on:"2024-03-11", aliases:["RASHID, Hassan M."], remarks:"DOB 12 Mar 1974; nationality Iran." },
+    { uid:"12811", source:"OFAC", name:"NOVA MARITIME SHIPPING LTD", type:"Entity", nationality:"마셜제도", address:"Majuro, Marshall Islands", program:"NPWMD", listed_on:"2025-01-22", aliases:[], remarks:"Vessel operator." },
+    { uid:"13002", source:"OFAC", name:"MV SEA HORIZON", type:"Vessel", nationality:"파나마", program:"DPRK4", listed_on:"2025-06-04", aliases:["SEA HORIZON"], remarks:"IMO 9354871; flag Panama." },
+    { uid:"13114", source:"OFAC", name:"VOSTOK DIGITAL SYSTEMS OOO", type:"Entity", nationality:"러시아", address:"Moscow, Russia", program:"RUSSIA-EO14024", listed_on:"2025-09-18", aliases:["VOSTOK DIGITAL"], remarks:"Technology procurement network." },
+    { uid:"13290", source:"OFAC", name:"ELENA VIKTOROVNA SOKOLOVA", type:"Individual", nationality:"러시아", birth_date:"1981-08-04", address:"Saint Petersburg, Russia", program:"RUSSIA-EO14024", listed_on:"2026-02-13", aliases:["SOKOLOVA, E.V."], remarks:"DOB 04 Aug 1981." },
+    { uid:"13455", source:"OFAC", name:"GOLDEN SANDS EXCHANGE HOUSE", type:"Entity", nationality:"아랍에미리트", address:"Sharjah, UAE", program:"SDGT", listed_on:"2026-05-29", aliases:["GOLDEN SANDS EXCH"], remarks:"Money services business." },
+    { uid:"13501", source:"OFAC", name:"CARLOS EDUARDO MENDOZA", type:"Individual", nationality:"베네수엘라", birth_date:"1970-12-01", address:"Caracas, Venezuela", program:"VENEZUELA-EO13850", listed_on:"2026-04-08", aliases:["MENDOZA, C.E."], remarks:"" },
+    { uid:"13612", source:"OFAC", name:"AIR KORYO CARGO AN-148", type:"Aircraft", nationality:"북한", program:"DPRK", listed_on:"2026-01-19", aliases:["P-671"], remarks:"Aircraft tail number P-671." },
+    { uid:"KFIU-0231", source:"KoFIU", name:"김철수", type:"Individual", nationality:"북한", birth_date:"1968-11-02", address:"평양직할시", program:"공중협박자금조달금지법 제4조", listed_on:"2025-11-14", aliases:["KIM CHOL SU"], remarks:"금융거래제한대상자 지정." },
+    { uid:"KFIU-0232", source:"KoFIU", name:"조선무역총회사", type:"Entity", nationality:"북한", address:"평양직할시 중구역", program:"공중협박자금조달금지법 제4조", listed_on:"2025-11-14", aliases:["KOREA TRADING CORPORATION"], remarks:"" },
+    { uid:"KFIU-0245", source:"KoFIU", name:"박영호", type:"Individual", nationality:"북한", birth_date:"1975-04-19", address:"중국 단둥", program:"공중협박자금조달금지법 제4조", listed_on:"2026-03-27", aliases:["PAK YONG HO"], remarks:"해외 파견 금융대리인." },
+    { uid:"KFIU-0251", source:"KoFIU", name:"대성은행", type:"Entity", nationality:"북한", address:"평양직할시", program:"UN 안보리 결의 2270호", listed_on:"2026-06-30", aliases:["DAESONG BANK"], remarks:"" },
+    { uid:"KFIU-0252", source:"KoFIU", name:"이만복", type:"Individual", nationality:"북한", birth_date:"1962-07-30", address:"미상", program:"공중협박자금조달금지법 제4조", listed_on:"2026-06-30", aliases:["RI MAN BOK"], remarks:"" },
+    { uid:"6908345", source:"UNSC", name:"ABDUL RAHMAN YASIN", type:"Individual", nationality:"이라크", birth_date:"1960-04-10", address:"Baghdad, Iraq", program:"Al-Qaida", listed_on:"2001-10-06", aliases:["TAHA, Abdul Rahman S.","YASIN, Abdul Rahman"], remarks:"Listed pursuant to resolution 1267." },
+    { uid:"6908417", source:"UNSC", name:"HAQQANI NETWORK", type:"Entity", nationality:"아프가니스탄", address:"Miram Shah, Pakistan", program:"Taliban", listed_on:"2012-11-05", aliases:["HQN"], remarks:"" },
+    { uid:"6908520", source:"UNSC", name:"KIM YONG CHOL", type:"Individual", nationality:"북한", birth_date:"1962-01-18", address:"Pyongyang, DPRK", program:"DPRK", listed_on:"2016-11-30", aliases:["KIM, Yong-chol"], remarks:"Reconnaissance General Bureau." },
+    { uid:"6908733", source:"UNSC", name:"KOREA MINING DEVELOPMENT TRADING CORPORATION", type:"Entity", nationality:"북한", address:"Central District, Pyongyang", program:"DPRK", listed_on:"2009-04-24", aliases:["KOMID","CHANGGWANG SINYONG CORPORATION"], remarks:"Primary arms dealer." },
+    { uid:"6909101", source:"UNSC", name:"ISLAMIC STATE IN IRAQ AND THE LEVANT", type:"Entity", nationality:"시리아", address:"Syria / Iraq", program:"Al-Qaida", listed_on:"2013-05-30", aliases:["ISIL","DAESH","ISIS"], remarks:"" },
+    { uid:"6909288", source:"UNSC", name:"MOHAMMED SALEH AL-KHALIFA", type:"Individual", nationality:"리비아", birth_date:"1979-09-23", address:"Tripoli, Libya", program:"Libya", listed_on:"2018-06-07", aliases:["AL KHALIFA, M.S."], remarks:"Human trafficking network." }
+  ],
+  changes: [
+    { date:"2026-07-16", items:[
+      { op:"added",   source:"OFAC", name:"GOLDEN SANDS EXCHANGE HOUSE", type:"Entity",     uid:"13455" },
+      { op:"added",   source:"OFAC", name:"ELENA VIKTOROVNA SOKOLOVA",   type:"Individual", uid:"13290" },
+      { op:"removed", source:"OFAC", name:"PACIFIC RIM LOGISTICS INC",   type:"Entity",     uid:"11204" }
+    ]},
+    { date:"2026-07-15", items:[
+      { op:"added",    source:"UNSC", name:"MOHAMMED SALEH AL-KHALIFA", type:"Individual", uid:"6909288" },
+      { op:"modified", source:"UNSC", name:"HAQQANI NETWORK", type:"Entity", uid:"6908417", note:"주소 변경" }
+    ]},
+    { date:"2026-07-14", items:[] },
+    { date:"2026-07-13", items:[
+      { op:"added",   source:"OFAC", name:"VOSTOK DIGITAL SYSTEMS OOO",  type:"Entity", uid:"13114" },
+      { op:"removed", source:"UNSC", name:"AL-NUSRAH FRONT SUPPLY CELL", type:"Entity", uid:"6908999" }
+    ]},
+    { date:"2026-07-12", items:[] },
+    { date:"2026-07-11", items:[
+      { op:"added", source:"OFAC", name:"CARLOS EDUARDO MENDOZA", type:"Individual", uid:"13501" }
+    ]}
+  ]
+};
+
+/* 사내망에서 CDN이 막히면 lucide가 없는 채로 실행됩니다.
+   그대로 두면 createIcons() 예외가 렌더 전체를 중단시키므로 빈 구현으로 대체합니다.
+   (아이콘만 사라지고 표·수치는 정상 표시) */
+if(typeof lucide === "undefined") window.lucide = { createIcons(){} };
+
+/* 원본 명단에는 따옴표·꺾쇠가 그대로 들어옵니다(예: O'BRIEN, "AL-…").
+   속성·본문에 그대로 꽂으면 행이 깨지므로 전부 이 함수를 거칩니다. */
+const esc = s => String(s ?? "").replace(/[&<>"']/g,
+  c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+/* ═══════════ 상태 ═══════════ */
+let DATA = DEMO;
+let CAL = [];
+let LIVE = false;            // 실데이터 로드 성공 여부
+let CHG_INDEX = [];          // changes/index.json
+const DETAIL_CACHE = {};     // 상세 샤드 캐시
+const state = { q:"", src:new Set(), type:new Set(), day:null };
+
+/* diff_engine.record_key() / build_site.shard_of() 와 규칙이 반드시 일치해야 합니다.
+   한쪽만 바꾸면 상세 모달이 영구히 열리지 않습니다. (300건 교차검증 통과) */
+const DETAIL_SHARDS = 24;
+const nameKey = name => (name || "").toUpperCase().replace(/[^A-Z0-9가-힣]/g, "");
+const recordKey = (src, name, type, uid) => `${src}|${uid ? uid : nameKey(name)}|${type}`;
+function shardOf(key){
+  let sum = 0;
+  for(let i = 0; i < key.length; i++) sum += key.charCodeAt(i);
+  return String(sum % DETAIL_SHARDS).padStart(2, "0");
+}
+const $ = s => document.querySelector(s);
+const nf = n => (n ?? 0).toLocaleString("ko-KR");
+const TYPE_KO = { Individual:"개인", Entity:"단체", Vessel:"선박", Aircraft:"항공기", Unknown:"미상" };
+const TYPE_BADGE = { Individual:"badge-blue", Entity:"badge-purple", Vessel:"badge-orange", Aircraft:"badge-gray", Unknown:"badge-gray" };
+const SRC_BADGE = { OFAC:"badge-blue", EU:"badge-teal", UNSC:"badge-orange", KoFIU:"badge-purple" };
+/* 날짜 표기 규칙: YYYY.MM.DD.(마침표 포함).
+   단 원본에 연도만 있거나("1971") 자유 서술인 값("circa 1965")도 섞여 있으므로,
+   완전한 ISO 날짜일 때만 변환하고 나머지는 원문을 그대로 보여줍니다. */
+const dk = v => /^\d{4}-\d{2}-\d{2}$/.test(v || "") ? v.replaceAll("-", ".") + "." : (v || "");
+const srcOf = c => DATA.meta.sources.find(s => s.code === c) || {};
+
+/* ═══════════ 다크모드 ═══════════ */
+function toggleDark(){
+  document.documentElement.classList.add("no-transition");
+  const on = document.documentElement.classList.toggle("dark");
+  try{ localStorage.setItem("wlf-dark", on ? "1" : "0"); }catch(e){}
+  $("#dark-icon").setAttribute("data-lucide", on ? "sun" : "moon");
+  lucide.createIcons();
+  drawTrend();
+  setTimeout(() => document.documentElement.classList.remove("no-transition"), 60);
+}
+try{ if(localStorage.getItem("wlf-dark") === "1") document.documentElement.classList.add("dark"); }catch(e){}
+
+/* ═══════════ 탭 ═══════════ */
+function switchTab(e, id){
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  (e.currentTarget || e.target.closest(".tab-btn")).classList.add("active");
+  $("#tab-" + id).classList.add("active");
+  window.scrollTo({ top:0, behavior:"smooth" });
+  if(id === "overview") drawTrend();
+}
+function gotoList(srcCode){
+  state.src.clear();
+  if(srcCode) state.src.add(srcCode);
+  document.querySelectorAll("#fb-src .fb").forEach(b => b.classList.toggle("on", state.src.has(b.dataset.v)));
+  document.querySelectorAll(".tab-btn")[1].click();
+  renderTable();
+}
+function gotoType(t){
+  state.type.clear(); state.type.add(t);
+  document.querySelectorAll("#fb-type .fb").forEach(b => b.classList.toggle("on", state.type.has(b.dataset.v)));
+  document.querySelectorAll(".tab-btn")[1].click();
+  renderTable();
+}
+
+/* ═══════════ 툴팁 ═══════════ */
+function tip(html, ev){
+  const t = $("#tt");
+  t.innerHTML = html;
+  t.style.display = "block";
+  t.style.left = Math.min(ev.clientX + 12, window.innerWidth - 300) + "px";
+  t.style.top = Math.max(8, ev.clientY - 52) + "px";
+}
+function untip(){ $("#tt").style.display = "none"; }
+
+/* ═══════════ 데이터 로드 ═══════════
+   build_site.py 산출물을 화면 스키마로 변환합니다.
+     data/meta.json        갱신시각 · 출처별 건수 · 수집상태 · 최근 변동
+     data/stats.json       유형 · 국적 · 지정근거 · 교차표 · 추이 · 지정연도
+     data/index.json       슬림 인덱스 {fields, rows}
+     data/changes/index.json  일자별 변경 요약
+   하나라도 못 읽으면 DEMO로 폴백합니다(파일을 그냥 열어봤을 때).
+   ─────────────────────────────────────────────────────────── */
+
+/* 표시용 고정 메타(로고성 정보). 건수·갱신일 같은 변동값은 meta.json이 채웁니다. */
+const SOURCE_META = {
+  OFAC:  { label:"미국 재무부 OFAC", org:"U.S. Department of the Treasury", list:"SDN List",
+           format:"XML",   cycle:"수시(일 1회 이상)",   color:"#2563EB" },
+  EU:    { label:"EU 집행위원회",    org:"European Commission",             list:"통합 금융제재 명단(FSD)",
+           format:"XML",   cycle:"수시",               color:"#0D9488" },
+  UNSC:  { label:"UN 안전보장이사회", org:"United Nations Security Council", list:"Consolidated List",
+           format:"XML",   cycle:"수시",               color:"#D97706" },
+  KoFIU: { label:"금융정보분석원",   org:"대한민국 금융위원회 FIU",        list:"금융거래등제한대상자(고시 별표)",
+           format:"PDF",   cycle:"수시(고시 개정 시)", color:"#7C3AED" }
+};
+
+/* 국적은 수집기(countries.py)가 국가위험평가 255개국 정본 기준으로 이미
+   한글 표시명으로 정규화해 보냅니다. 화면에서 다시 매핑하면 두 표가 갈라지므로
+   여기서는 손대지 않고 그대로 씁니다. (정규화 실패분은 원문이 그대로 옵니다) */
+
+const getJSON = async (path) => {
+  const res = await fetch("data/" + path, { cache:"no-store" });
+  if(!res.ok) throw new Error(path + " HTTP " + res.status);
+  return res.json();
+};
+
+/* 슬림 인덱스({fields,rows}) → 레코드 배열. 필드 순서 변경에 견디도록 이름으로 찾습니다. */
+function expandIndex(index){
+  const idx = {};
+  ["s","n","t","u","c","d","p","l","cc"].forEach(f => { idx[f] = index.fields.indexOf(f); });
+  const pick = (row, f) => (idx[f] >= 0 ? (row[idx[f]] || "") : "");
+  return index.rows.map(row => ({
+    source: pick(row,"s"), name: pick(row,"n"), type: pick(row,"t") || "Unknown",
+    uid: pick(row,"u"), nationality: pick(row,"c"), birth_date: pick(row,"d"),
+    program: pick(row,"p"), listed_on: pick(row,"l"), nationality_code: pick(row,"cc")
+  }));
+}
+
+function adapt(meta, stats, index, chgIndex){
+  const status = {};
+  (meta.source_status || []).forEach(s => { status[s.code] = s; });
+
+  const sources = (meta.sources || []).map(s => {
+    const st = status[s.code] || {};
+    const count = st.count != null ? st.count : (meta.by_source || {})[s.code] || 0;
+    const everCollected = !!st.collected_at;
+    return Object.assign({ code:s.code, url:s.url, count,
+      updated: st.collected_at || null,
+      stale: !!st.stale,
+      unavailable: !everCollected      // 한 번도 수집된 적 없음 (예: KoFIU 미해결)
+    }, SOURCE_META[s.code] || { label:s.name, org:"", list:s.name, format:"—", cycle:"—", color:"#94A3B8" });
+  });
+
+  /* 최근 7일 변동 합산.
+     최초 적재일(전체가 통째로 added)은 제재 신규지정이 아니라 수집 시작일이므로
+     제외합니다. 넣으면 "7일 신규 +20,227" 같은 허수가 나옵니다. */
+  /* 최초 적재일(수집 시작일)은 전체가 통째로 added로 잡히지만 제재 신규지정이
+     아니므로 변동 집계에서 뺍니다. 넣으면 "7일 신규 +27,248" 같은 허수가 나옵니다.
+     added와 total을 '같다'로 보지 않는 이유: 원본에 중복 항목이 있으면
+     키 기준 added가 저장 건수보다 몇 건 적습니다(KoFIU 고시에서 3건 확인).
+     해제·변경이 하나도 없이 사실상 전건이 신규인 날을 최초 적재로 봅니다. */
+  const isBaseline = e =>
+    e.removed === 0 && e.modified === 0 && e.total > 0 && e.added >= e.total * 0.99;
+  (chgIndex || []).forEach(e => { e.baseline = isBaseline(e); });
+  const since = new Date(meta.generated_at); since.setDate(since.getDate() - 7);
+  const d7 = { added:0, removed:0, modified:0 };
+  (chgIndex || [])
+    .filter(e => new Date(e.date) >= since && !e.baseline)
+    .forEach(e => { d7.added += e.added||0; d7.removed += e.removed||0; d7.modified += e.modified||0; });
+
+  /* 추이: [[날짜, 총건수, {출처별}], ...] → 값 배열 + 축 라벨 */
+  const points = (stats.trend || []).slice(-12);
+  const labels = points.length <= 6
+    ? points.map(p => dk(p[0]).slice(5))
+    : [0,1,2,3,4,5].map(i => dk(points[Math.round(i*(points.length-1)/5)][0]).slice(5));
+
+  const scope = stats.by_year_scope || {};
+  return {
+    meta: {
+      generated_at: meta.generated_at,
+      sources,
+      delta_7d: d7,
+      trend: points.map(p => p[1]),
+      trend_labels: labels,
+      trend_dates: points.map(p => p[0]),
+      nationality_top: (stats.top_nationalities || []).slice(0,10),
+      program_top: (stats.top_programs || []).slice(0,10),
+      year_new: stats.by_year || [],
+      year_scope: scope.sources || [],
+      type_dist: stats.by_type || [],
+      cross: stats.cross || {},
+      dob_known_ratio: stats.dob_known_ratio
+    },
+    records: expandIndex(index),
+    changes: []
+  };
+}
+
+async function loadData(){
+  try{
+    const [meta, stats, index, chgIndex] = await Promise.all([
+      getJSON("meta.json"), getJSON("stats.json"),
+      getJSON("index.json"), getJSON("changes/index.json").catch(() => [])
+    ]);
+    DATA = adapt(meta, stats, index, chgIndex);
+    CHG_INDEX = chgIndex || [];
+    LIVE = true;
+  }catch(err){
+    console.info("실데이터 없음 — 데모로 표시합니다:", err.message);
+    $("#demo-banner").style.display = "";
+  }
+  buildCalendar();
+  renderAll();
+}
+
+/* 90일 변경 캘린더.
+   실데이터: changes/index.json의 일자별 집계만 사용합니다. 수집 시작 이전 날짜는
+   "변경 없음"이 아니라 "관측 없음"이므로 회색 빈칸으로 남기고, 상세(items)는
+   칸을 눌렀을 때 changes/{날짜}.json에서 지연 로드합니다.
+   데모: 화면 확인용 더미를 결정론적으로 채웁니다(LIVE=false일 때만). */
+function buildCalendar(){
+  const base = new Date(DATA.meta.generated_at);
+  const map = {};
+  if(LIVE){
+    CHG_INDEX.forEach(e => { map[e.date] = e; });
+  }else{
+    DATA.changes.forEach(d => { map[d.date] = d; });
+  }
+
+  let seed = 20260717;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+  CAL = [];
+  for(let i = 89; i >= 0; i--){
+    const d = new Date(base); d.setDate(d.getDate() - i);
+    const iso = d.toISOString().slice(0, 10);
+    const hit = map[iso];
+
+    if(LIVE){
+      const observed = !!hit;
+      const baseline = !!(hit && hit.baseline);
+      CAL.push({
+        date: iso, observed, baseline,
+        baseline_total: baseline ? hit.total : 0,
+        added: (hit && !baseline) ? (hit.added || 0) : 0,
+        removed: (hit && !baseline) ? (hit.removed || 0) : 0,
+        modified: (hit && !baseline) ? (hit.modified || 0) : 0,
+        n: (hit && !baseline) ? (hit.added || 0) + (hit.removed || 0) + (hit.modified || 0) : 0,
+        items: null   // 지연 로드
+      });
+      continue;
+    }
+
+    /* ── 데모 전용 더미 ── */
+    let items = hit ? hit.items : null;
+    if(!items){
+      const dow = d.getDay();
+      const k = (dow === 0 || dow === 6) ? (rnd() < 0.85 ? 0 : 1) : Math.floor(rnd() * 9);
+      items = Array.from({ length:k }, (_, j) => ({
+        op: rnd() < 0.72 ? "added" : "removed",
+        source: ["OFAC","OFAC","OFAC","UNSC","KoFIU"][Math.floor(rnd() * 5)],
+        name: "(데모 변경 " + iso.slice(5) + "-" + (j + 1) + ")",
+        type: rnd() < 0.5 ? "Individual" : "Entity",
+        uid: "-"
+      }));
+    }
+    CAL.push({
+      date: iso, observed: true, items,
+      added: items.filter(x => x.op === "added").length,
+      removed: items.filter(x => x.op === "removed").length,
+      modified: items.filter(x => x.op === "modified").length,
+      n: items.length
+    });
+  }
+}
+
+/* 특정 일자의 변경 상세를 가져옵니다(실데이터 한정, 1회 캐시). */
+async function fetchDayItems(entry){
+  if(entry.items) return entry.items;
+  if(!LIVE || !entry.n){ entry.items = entry.items || []; return entry.items; }
+  try{
+    const day = await getJSON("changes/" + entry.date + ".json");
+    const wrap = (op, list) => (list || []).map(r => Object.assign({ op }, r));
+    entry.items = [
+      ...wrap("added", day.added),
+      ...wrap("removed", day.removed),
+      ...wrap("modified", (day.modified || []).map(m => m.record || m))
+    ];
+  }catch(err){
+    console.info("변경 상세 로드 실패:", entry.date, err.message);
+    entry.items = [];
+  }
+  return entry.items;
+}
+
+/* ═══════════ 전체 현황 ═══════════ */
+function daysAgo(iso){
+  if(!iso) return null;
+  return Math.max(0, Math.floor((new Date(DATA.meta.generated_at) - new Date(iso)) / 86400000));
+}
+function srcState(s){
+  if(s.unavailable) return { kind:"none",  color:"var(--red)",    text:"수집 불가" };
+  const age = daysAgo(s.updated);
+  if(s.stale)       return { kind:"stale", color:"var(--orange)", text:"D+" + age + " 지연", age };
+  if(age > 7)       return { kind:"stale", color:"var(--orange)", text:"D+" + age + " 지연", age };
+  return { kind:"ok", color:"var(--green)", text: age === 0 ? "오늘 갱신" : "D+" + age, age };
+}
+function renderKpis(){
+  const m = DATA.meta;
+  const total = m.sources.reduce((a, s) => a + s.count, 0);
+  const bad = m.sources.filter(s => srcState(s).kind !== "ok");
+
+  const card = (val, label, icon, color, bg) => `
+    <div style="background:${bg};border:1px solid var(--bd);border-radius:var(--r-lg);padding:12px 16px;box-shadow:var(--sh-sm);text-align:center;">
+      <div class="kpi-num" style="font-size:28px;font-weight:700;letter-spacing:-.03em;color:${color};line-height:1;">${val}</div>
+      <div style="font-size:11px;color:${color};margin-top:4px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:4px;">
+        <i data-lucide="${icon}" style="width:11px;height:11px;"></i>${label}
+      </div>
+    </div>`;
+
+  $("#kpis").innerHTML =
+    card(nf(total), "총 등재 건수", "database", "var(--tx-1)", "var(--surface)") +
+    card("+" + m.delta_7d.added, "최근 7일 신규", "shield-alert", "var(--red)", "var(--red-bg)") +
+    card("−" + m.delta_7d.removed, "최근 7일 해제", "check-circle", "var(--green)", "var(--green-bg)") +
+    card(bad.length, "점검 필요 출처", "alert-triangle",
+         bad.length ? "var(--orange)" : "var(--green)",
+         bad.length ? "var(--orange-bg)" : "var(--green-bg)");
+}
+function renderSrcStatus(){
+  $("#src-status").innerHTML = DATA.meta.sources.map(s => {
+    const st = srcState(s);
+    return `<div class="ss-item">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="dot" style="background:${st.color};"></span>
+        <span class="mono" style="font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--tx-1);">${s.code}</span>
+        <span style="font-size:10px;color:var(--tx-3);margin-left:auto;">${s.format}</span>
+      </div>
+      <div class="ss-date" style="font-size:11.5px;color:var(--tx-2);margin-top:5px;">${s.updated ? dk(s.updated) : "—"}</div>
+      <div class="mono" style="font-size:10px;color:${st.kind === "ok" ? "var(--tx-3)" : st.color};letter-spacing:.04em;margin-top:1px;">
+        ${st.text} · ${nf(s.count)}건
+      </div>
+    </div>`;
+  }).join("");
+}
+function segAndCards(segEl, cardEl, data, total, onClick){
+  $(segEl).innerHTML = data.map(d =>
+    `<div class="seg-bar-item" style="flex:${d.count};background:${d.color};"
+      onmousemove="tip('<b>${d.label}</b><br>${nf(d.count)}건 · ${(d.count / total * 100).toFixed(1)}%',event)"
+      onmouseleave="untip()" onclick="${onClick}('${d.key}')"></div>`).join("");
+  $(cardEl).innerHTML = data.map(d =>
+    `<div class="grade-card" style="background:${d.bg};color:${d.color};" onclick="${onClick}('${d.key}')">
+      <div class="gc-num">${nf(d.count)}</div>
+      <div class="gc-pct">${(d.count / total * 100).toFixed(1)}%</div>
+      <div class="gc-lbl">${d.label}</div>
+    </div>`).join("");
+}
+function renderDist(){
+  const m = DATA.meta;
+  const total = m.sources.reduce((a, s) => a + s.count, 0);
+  const bgOf = { OFAC:"var(--blue-subtle)", EU:"var(--teal-bg)", UNSC:"var(--orange-bg)", KoFIU:"var(--purple-bg)" };
+  segAndCards("#seg-src", "#cards-src",
+    m.sources.map(s => ({ key:s.code, label:s.code, count:s.count, color:s.color, bg:bgOf[s.code] })),
+    total, "gotoList");
+
+  const tColor = { Individual:"#2563EB", Entity:"#7C3AED", Vessel:"#D97706", Aircraft:"#94A3B8", Unknown:"#CBD5E1" };
+  const tBg = { Individual:"var(--blue-subtle)", Entity:"var(--purple-bg)", Vessel:"var(--orange-bg)", Aircraft:"var(--bd-sub)", Unknown:"var(--bd-sub)" };
+  const tTotal = m.type_dist.reduce((a, t) => a + t[1], 0);
+  segAndCards("#seg-type", "#cards-type",
+    m.type_dist.map(([k, v]) => ({ key:k, label:TYPE_KO[k], count:v, color:tColor[k], bg:tBg[k] })),
+    tTotal, "gotoType");
+}
+
+/* 변경 캘린더 */
+function calColor(n){
+  if(n === 0) return "var(--bd-sub)";
+  if(n <= 2) return "var(--blue-light)";
+  if(n <= 5) return "var(--blue)";
+  return "var(--blue-h)";
+}
+function renderWaffle(){
+  $("#waffle").innerHTML = CAL.map((d, i) => {
+    const n = d.n;
+    const label = !d.observed
+      ? "수집 이전 (관측 없음)"
+      : d.baseline
+        ? `수집 시작 · 최초 적재 ${nf(d.baseline_total)}건`
+        : (n === 0 ? "변경 없음" : `변경 ${nf(n)}건 · 신규 ${nf(d.added)} / 해제 ${nf(d.removed)} / 변경 ${nf(d.modified)}`);
+    const bg = !d.observed ? "transparent" : (d.baseline ? "var(--purple)" : calColor(n));
+    return `<div class="waffle-cell" data-i="${i}"
+      style="background:${bg};${(!d.observed || (n === 0 && !d.baseline)) ? "border:1px dashed var(--bd);" : ""}${!d.observed ? "opacity:.5;" : ""}"
+      onmousemove="tip('<b>${dk(d.date)}</b><br>${label}',event)" onmouseleave="untip()"
+      onclick="pickDay(${i})"></div>`;
+  }).join("");
+  $("#wf-range").textContent = dk(CAL[0].date) + " ~ " + dk(CAL[CAL.length - 1].date);
+}
+const DAY_ITEM_LIMIT = 100;   // 초기 적재일처럼 수만 건이 몰린 날 대비
+async function pickDay(i){
+  const wf = $("#waffle");
+  const cells = wf.querySelectorAll(".waffle-cell");
+  if(state.day === i){
+    state.day = null; wf.classList.remove("has-active");
+    cells.forEach(c => c.classList.remove("on"));
+    $("#wf-detail").innerHTML = "";
+    return;
+  }
+  state.day = i;
+  wf.classList.add("has-active");
+  cells.forEach((c, k) => c.classList.toggle("on", k === i));
+
+  const d = CAL[i];
+  const shell = body => `
+    <div style="border:1px solid var(--bd);border-radius:var(--r-md);padding:12px 14px;background:var(--bg);">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <span class="mono" style="font-size:12px;font-weight:700;color:var(--tx-1);">${dk(d.date)}</span>
+        <span class="mono" style="font-size:11px;color:var(--tx-3);">
+          ${!d.observed ? "수집 이전"
+            : d.baseline ? `최초 적재 ${nf(d.baseline_total)}건`
+            : `신규 ${nf(d.added)} · 해제 ${nf(d.removed)} · 변경 ${nf(d.modified)}`}
+        </span>
+      </div>${body}</div>`;
+
+  if(!d.observed){
+    $("#wf-detail").innerHTML = shell(
+      `<span style="font-size:12px;color:var(--tx-3);">수집을 시작하기 전이라 관측 기록이 없습니다.</span>`);
+    return;
+  }
+  if(d.baseline){
+    $("#wf-detail").innerHTML = shell(
+      `<span style="font-size:12px;color:var(--tx-3);word-break:keep-all;">수집을 시작한 날입니다. 기존 명단 전체를 최초로 받은 것이므로 제재 신규지정이 아닙니다. 변동 집계에서 제외했습니다.</span>`);
+    return;
+  }
+  if(!d.n){
+    $("#wf-detail").innerHTML = shell(`<span style="font-size:12px;color:var(--tx-3);">해당일 변경 없음</span>`);
+    return;
+  }
+
+  $("#wf-detail").innerHTML = shell(
+    `<span class="mono" style="font-size:11.5px;color:var(--tx-3);">불러오는 중…</span>`);
+  const items = await fetchDayItems(d);
+  if(state.day !== i) return;   // 로딩 중 다른 칸을 눌렀으면 버림
+  const shown = items.slice(0, DAY_ITEM_LIMIT);
+  $("#wf-detail").innerHTML = shell(
+    shown.map(changeRow).join("") +
+    (items.length > shown.length
+      ? `<div class="mono" style="font-size:11px;color:var(--tx-3);padding-top:6px;">외 ${nf(items.length - shown.length)}건 생략</div>`
+      : ""));
+}
+
+/* 추이 */
+function drawTrend(){
+  const vals = DATA.meta.trend, W = 900, H = 150, P = 12;
+
+  /* 수집 첫날은 점이 1개뿐입니다. 선을 그리면 좌표가 NaN이 되므로 안내로 대체합니다. */
+  if(vals.length < 2){
+    $("#trend").innerHTML =
+      `<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#94A3B8" font-size="13">
+         추이는 수집 2회차부터 표시됩니다 (현재 ${vals.length}회 관측)
+       </text>`;
+    $("#trend-axis").innerHTML = "";
+    $("#trend-delta").textContent = "수집 2회차부터";
+    return;
+  }
+
+  const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
+  const x = i => P + i * (W - P * 2) / (vals.length - 1);
+  const y = v => H - P - ((v - min) / span) * (H - P * 2 - 10);
+  const pts = vals.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const grid = getComputedStyle(document.body).getPropertyValue("--bd").trim() || "#E2E8F0";
+
+  $("#trend").innerHTML =
+    [0.25, 0.5, 0.75].map(f => `<line x1="0" x2="${W}" y1="${(H * f).toFixed(1)}" y2="${(H * f).toFixed(1)}" stroke="${grid}" stroke-width="1"/>`).join("") +
+    `<polygon points="${pts} ${x(vals.length - 1)},${H} ${x(0)},${H}" fill="#2563EB" opacity=".08"/>` +
+    `<polyline points="${pts}" fill="none" stroke="#2563EB" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` +
+    `<circle cx="${x(vals.length - 1).toFixed(1)}" cy="${y(vals[vals.length - 1]).toFixed(1)}" r="4" fill="#2563EB"/>`;
+
+  $("#trend-axis").innerHTML = DATA.meta.trend_labels.map(l =>
+    `<span class="mono" style="font-size:10px;color:var(--tx-3);letter-spacing:.04em;">${l}</span>`).join("");
+  const diff = vals[vals.length - 1] - vals[0];
+  const dates = DATA.meta.trend_dates;
+  const period = (LIVE && dates && dates.length > 1)
+    ? `${dk(dates[0])} ~ ${dk(dates[dates.length - 1])}`
+    : "12주간";
+  $("#trend-delta").innerHTML = `${period} <span style="color:${diff >= 0 ? "var(--red)" : "var(--green)"};font-weight:600;">${diff >= 0 ? "+" : ""}${nf(diff)}</span>`;
+}
+
+/* ═══════════ 명단 조회 ═══════════ */
+function renderFilters(){
+  $("#fb-src").innerHTML = DATA.meta.sources.map(s =>
+    `<button class="fb" data-k="src" data-v="${s.code}">${s.code}</button>`).join("");
+  $("#fb-type").innerHTML = DATA.meta.type_dist.map(t =>
+    `<button class="fb" data-k="type" data-v="${t[0]}">${TYPE_KO[t[0]]}</button>`).join("");
+
+  document.querySelectorAll("#fb-src .fb, #fb-type .fb").forEach(b => b.addEventListener("click", () => {
+    const set = state[b.dataset.k];
+    set.has(b.dataset.v) ? set.delete(b.dataset.v) : set.add(b.dataset.v);
+    b.classList.toggle("on", set.has(b.dataset.v));
+    renderTable();
+  }));
+}
+function resetFilter(){
+  state.q = ""; state.src.clear(); state.type.clear();
+  $("#q").value = "";
+  document.querySelectorAll(".fb").forEach(b => b.classList.remove("on"));
+  renderTable();
+}
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  return DATA.records.filter(r => {
+    if(state.src.size && !state.src.has(r.source)) return false;
+    if(state.type.size && !state.type.has(r.type)) return false;
+    if(!q) return true;
+    return [r.name, r.uid, ...(r.aliases || [])].join(" ").toLowerCase().includes(q);
+  });
+}
+/* 전량(2만건) DOM 생성은 모바일에서 그대로 멈춥니다. 상위 N건만 그리고
+   나머지는 검색으로 좁히도록 안내합니다. */
+const ROW_LIMIT = 300;
+function renderTable(){
+  const all = filtered();
+  const rows = all.slice(0, ROW_LIMIT);
+  $("#tbl-cnt").textContent = `${nf(all.length)} / ${nf(DATA.records.length)}건`;
+  $("#tbl-empty").style.display = all.length ? "none" : "block";
+  const more = $("#tbl-more");
+  if(more){
+    more.style.display = all.length > ROW_LIMIT ? "" : "none";
+    more.textContent = `상위 ${nf(ROW_LIMIT)}건만 표시합니다. 검색·필터로 좁혀 주십시오. (조건 일치 ${nf(all.length)}건)`;
+  }
+
+  $("#tbody").innerHTML = rows.map(r => `
+    <tr onclick="openModal('${r.source}','${esc(r.uid)}',this.dataset.n,'${r.type}')" data-n="${esc(r.name)}">
+      <td>
+        <div class="nm">${esc(r.name)}</div>
+        ${(r.aliases || []).length ? `<div class="al">a.k.a. ${esc(r.aliases.join(" · "))}</div>` : ""}
+      </td>
+      <td><span class="badge ${SRC_BADGE[r.source] || "badge-gray"}">${r.source}</span></td>
+      <td><span class="badge ${TYPE_BADGE[r.type] || "badge-gray"}">${TYPE_KO[r.type] || r.type}</span></td>
+      <td style="color:var(--tx-2);">${esc(r.nationality) || "—"}</td>
+      <td class="mono" style="font-size:12px;color:var(--tx-2);">${r.birth_date ? esc(dk(r.birth_date)) : "—"}</td>
+      <td style="font-size:12px;color:var(--tx-2);">${esc(r.program) || "—"}</td>
+      <td class="mono" style="font-size:12px;color:var(--tx-2);">${r.listed_on ? dk(r.listed_on) : "—"}</td>
+    </tr>`).join("");
+}
+
+/* ═══════════ 상세 모달 ═══════════
+   슬림 인덱스에는 별칭·주소·비고가 없습니다. 모달을 열 때
+   detail/{출처}/{샤드}.json 한 조각(약 390KB)만 받아 채웁니다. */
+async function openModal(source, uid, name, type){
+  let r = DATA.records.find(x => x.source === source && x.uid === uid && (!name || x.name === name));
+  if(!r) return;
+  let errMsg = "";
+
+  if(LIVE){
+    $("#dm-name").textContent = r.name;
+    $("#dm-badges").innerHTML = "";
+    $("#dm-detail").innerHTML =
+      `<div class="mono" style="font-size:12px;color:var(--tx-3);padding:8px 0;">상세 불러오는 중…</div>`;
+    $("#detail-modal").classList.add("open");
+    try{
+      const key = recordKey(r.source, r.name, r.type, r.uid);
+      const path = `detail/${r.source}/${shardOf(key)}.json`;
+      if(!DETAIL_CACHE[path]) DETAIL_CACHE[path] = await getJSON(path);
+      const full = DETAIL_CACHE[path][key];
+      if(full) r = Object.assign({}, r, full);
+      else console.info("상세 미발견 — 키 규칙 불일치 가능:", key);
+    }catch(err){
+      errMsg = err.message;
+    }
+  }
+
+  $("#dm-name").textContent = r.name;
+  $("#dm-badges").innerHTML =
+    `<span class="badge ${SRC_BADGE[r.source]}">${srcOf(r.source).label || r.source}</span>` +
+    `<span class="badge ${TYPE_BADGE[r.type]}">${TYPE_KO[r.type]}</span>` +
+    (r.program ? `<span class="badge badge-gray">${r.program}</span>` : "");
+
+  const rows = [
+    ["식별번호", esc(r.uid), true],
+    ["별칭", (r.aliases || []).length ? r.aliases.map(esc).join("<br>") : null, false],
+    ["국적", esc(r.nationality), false],
+    ["생년월일", r.birth_date ? esc(dk(r.birth_date)) : null, true],
+    ["주소", esc(r.address), false],
+    ["지정근거", esc(r.program), false],
+    ["지정일", r.listed_on ? esc(dk(r.listed_on)) : null, true],
+    ["비고", esc(r.remarks), false]
+  ].filter(([, v]) => v);
+
+  $("#dm-detail").innerHTML =
+    (errMsg ? `<div style="font-size:12px;color:var(--orange);padding:6px 0;">상세를 불러오지 못했습니다 (${errMsg}). 아래는 인덱스 정보만 표시합니다.</div>` : "") +
+    rows.map(([k, v, mono]) =>
+      `<div class="factor-row"><dt>${k}</dt><dd class="${mono ? "mono" : ""}">${v}</dd></div>`).join("");
+  $("#detail-modal").classList.add("open");
+  lucide.createIcons();
+}
+function closeModal(){ $("#detail-modal").classList.remove("open"); }
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+
+/* ═══════════ 통계 ═══════════ */
+function hbars(el, data, color){
+  const max = Math.max(...data.map(d => d[1])) || 1;
+  const sum = data.reduce((a, d) => a + d[1], 0);
+  $(el).innerHTML = data.map(([label, val]) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:5px 0;">
+      <span style="flex:0 0 150px;font-size:12.5px;color:var(--tx-1);text-align:right;">${label}</span>
+      <div style="flex:1;height:9px;background:var(--bd-sub);border-radius:5px;overflow:hidden;">
+        <div style="height:100%;width:${(val / max * 100).toFixed(1)}%;background:${color};border-radius:5px;"></div>
+      </div>
+      <span class="mono" style="flex:0 0 92px;font-size:11.5px;color:var(--tx-3);">${nf(val)} · ${(val / sum * 100).toFixed(1)}%</span>
+    </div>`).join("");
+}
+function renderStats(){
+  const m = DATA.meta;
+  hbars("#bar-nat", m.nationality_top, "#2563EB");
+  hbars("#bar-prog", m.program_top, "#7C3AED");
+  hbars("#bar-year", m.year_new, "#D97706");
+
+  /* 지정연도는 지정일(listed_on)이 있는 소스만 집계됩니다.
+     OFAC SDN.CSV에는 지정일 컬럼 자체가 없어 전체 추이로 읽으면 오독입니다. */
+  const yScope = $("#year-scope");
+  if(yScope){
+    const covered = m.year_new.reduce((a, y) => a + y[1], 0);
+    yScope.textContent = m.year_scope && m.year_scope.length
+      ? `${m.year_scope.join("·")} 한정 ${nf(covered)}건. OFAC SDN 원본에는 지정일 항목이 없어 제외됩니다.`
+      : "지정일이 제공되는 소스가 없습니다.";
+  }
+
+  const types = m.type_dist.map(t => t[0]);
+  const grand = m.sources.reduce((a, s) => a + s.count, 0);
+  const head = `<thead><tr><th>출처</th>${types.map(t => `<th style="text-align:right;">${TYPE_KO[t]}</th>`).join("")}<th style="text-align:right;">합계</th></tr></thead>`;
+  const body = m.sources.map(s => {
+    /* 교차표는 stats.json의 실집계를 그대로 씁니다(추정 비율 금지). */
+    const row = (m.cross && m.cross[s.code]) || {};
+    const cells = types.map(t =>
+      `<td class="mono" style="text-align:right;color:var(--tx-2);">${nf(row[t] || 0)}</td>`).join("");
+    return `<tr style="cursor:default;"><td><span class="badge ${SRC_BADGE[s.code]}">${s.code}</span></td>${cells}
+      <td class="mono" style="text-align:right;font-weight:700;color:var(--tx-1);">${nf(s.count)}</td></tr>`;
+  }).join("");
+  const foot = `<tr style="cursor:default;"><td style="font-weight:700;font-size:12px;">합계</td>
+    ${types.map(t => `<td class="mono" style="text-align:right;font-weight:700;">${nf(m.type_dist.find(x => x[0] === t)[1])}</td>`).join("")}
+    <td class="mono" style="text-align:right;font-weight:700;">${nf(grand)}</td></tr>`;
+  $("#cross").innerHTML = head + `<tbody>${body}${foot}</tbody>`;
+}
+
+/* ═══════════ 변경 이력 ═══════════ */
+const OP = {
+  added:    { badge:"badge-red",   label:"신규" },
+  removed:  { badge:"badge-green", label:"해제" },
+  modified: { badge:"badge-gray",  label:"변경" }
+};
+function changeRow(it){
+  const o = OP[it.op] || OP.modified;
+  const note = it.note
+    || ((it.changes || []).length
+        ? it.changes.map(c => FIELD_KO[c.field] || c.field).join("·") + " 변경"
+        : "");
+  return `<div class="timeline-item" style="align-items:flex-start;">
+    <span class="badge ${o.badge}" style="flex-shrink:0;">${o.label}</span>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:13px;font-weight:600;color:var(--tx-1);">${esc(it.name)}</div>
+      <div class="mono" style="font-size:10.5px;color:var(--tx-3);margin-top:2px;letter-spacing:.04em;">
+        ${esc(it.source)} · ${TYPE_KO[it.type] || esc(it.type)} · ${esc(it.uid || "—")}${note ? " · " + esc(note) : ""}
+      </div>
+    </div>
+  </div>`;
+}
+const FIELD_KO = {
+  name:"이름", type:"유형", nationality:"국적", birth_date:"생년월일",
+  address:"주소", program:"지정근거", listed_on:"지정일", aliases:"별칭", remarks:"비고"
+};
+async function renderChanges(){
+  const m = DATA.meta;
+  $("#chg-stamp").textContent = dk(m.generated_at.slice(0, 10)) + " 기준";
+
+  const win = CAL.slice(-30);
+  const add = win.reduce((a, d) => a + d.added, 0);
+  const rem = win.reduce((a, d) => a + d.removed, 0);
+  const days = win.filter(d => d.n).length;
+  const observedDays = win.filter(d => d.observed).length;
+  $("#chg-caption").textContent = observedDays < 30
+    ? `수집 시작 후 ${observedDays}일간 관측했고, 그중 ${days}일에 변경이 있었습니다. 신규 등재 건은 기존 고객 대상 재스크리닝(Rescreening) 검토 대상입니다.`
+    : `최근 30일간 ${days}일에 걸쳐 변경이 발생했습니다. 신규 등재 건은 기존 고객 대상 재스크리닝(Rescreening) 검토 대상입니다.`;
+
+  const c = (v, l, color, bg) => `
+    <div style="background:${bg};border:1px solid var(--bd);border-radius:var(--r-lg);padding:12px 16px;box-shadow:var(--sh-sm);text-align:center;">
+      <div class="kpi-num" style="font-size:26px;font-weight:700;letter-spacing:-.03em;color:${color};line-height:1;">${v}</div>
+      <div style="font-size:11px;color:${color};margin-top:4px;font-weight:500;">${l}</div>
+    </div>`;
+  $("#chg-kpis").innerHTML =
+    c("+" + add, "30일 신규", "var(--red)", "var(--red-bg)") +
+    c("−" + rem, "30일 해제", "var(--green)", "var(--green-bg)") +
+    c(nf(add + rem), "총 변경", "var(--tx-1)", "var(--surface)") +
+    c(days + "일", "변경 발생일", "var(--blue)", "var(--blue-subtle)");
+
+  /* 최근 변경일 목록. 상세는 일자별 파일이라 한 번에 다 받으면 낭비이므로
+     최근 5일치만 병렬로 받고, 나머지는 건수만 보여준 뒤 전체현황 캘린더에서 열게 합니다. */
+  const DETAIL_DAYS = 5;
+  const recent = CAL.slice().reverse().filter(d => d.n).slice(0, 12);
+  if(!recent.length){
+    $("#chg-list").innerHTML =
+      `<p style="font-size:12.5px;color:var(--tx-3);padding:16px 0;word-break:keep-all;">
+         아직 관측된 변경이 없습니다. 다음 수집 회차부터 전일 대비 신규·해제·변경이 여기에 쌓입니다.</p>`;
+    return;
+  }
+  await Promise.all(recent.slice(0, DETAIL_DAYS).map(fetchDayItems));
+
+  $("#chg-list").innerHTML = recent.map(d => {
+    const head = `<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+        <span class="mono" style="font-size:12.5px;font-weight:700;color:var(--tx-1);letter-spacing:.02em;">${dk(d.date)}</span>
+        <span class="mono" style="font-size:10.5px;color:var(--tx-3);letter-spacing:.04em;">신규 ${nf(d.added)} · 해제 ${nf(d.removed)} · 변경 ${nf(d.modified)}</span>
+      </div>`;
+    let body;
+    if(!d.items){
+      body = `<div class="mono" style="font-size:11px;color:var(--tx-3);margin-top:4px;">
+                전체 현황 탭의 변경 캘린더에서 해당 칸을 누르면 상세를 볼 수 있습니다.</div>`;
+    }else{
+      const shown = d.items.slice(0, 20);
+      body = `<div style="margin-top:4px;">${shown.map(changeRow).join("")}
+        ${d.items.length > shown.length
+          ? `<div class="mono" style="font-size:11px;color:var(--tx-3);padding-top:4px;">외 ${nf(d.items.length - shown.length)}건 생략</div>`
+          : ""}</div>`;
+    }
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--bd);">${head}${body}</div>`;
+  }).join("");
+}
+
+/* ═══════════ 출처 ═══════════ */
+function renderSources(){
+  $("#src-cards").innerHTML = DATA.meta.sources.map(s => {
+    const st = srcState(s);
+    const badgeCls = st.kind === "ok" ? "badge-green" : (st.kind === "none" ? "badge-red" : "badge-orange");
+    const badgeTxt = st.kind === "ok" ? "정상 갱신" : (st.kind === "none" ? "수집 불가" : "갱신 지연 " + st.text);
+    return `<div class="src-card">
+      <div class="src-card-body">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="badge ${SRC_BADGE[s.code]}">${s.code}</span>
+          <span style="font-size:14px;font-weight:700;color:var(--tx-1);">${s.label}</span>
+          <span class="badge ${badgeCls}" style="margin-left:auto;">${badgeTxt}</span>
+        </div>
+        <p style="font-size:11.5px;color:var(--tx-3);margin-top:3px;">${s.org}</p>
+        ${st.kind === "none" ? `<p style="font-size:11.5px;color:var(--orange);margin-top:6px;word-break:keep-all;">
+          아직 자동 수집이 연결되지 않은 출처입니다. 이 명단은 화면에 반영되지 않으므로 원본을 직접 확인하십시오.</p>` : ""}
+        <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;">
+          ${[["명단", s.list], ["형식", s.format], ["갱신주기", s.cycle],
+             ["최종수집", s.updated ? dk(s.updated) : "—"], ["등재건수", nf(s.count) + "건"]].map(([k, v]) => `
+            <div>
+              <div class="mono" style="font-size:9.5px;color:var(--tx-3);letter-spacing:.1em;text-transform:uppercase;">${k}</div>
+              <div style="font-size:12.5px;color:var(--tx-1);font-weight:500;margin-top:2px;">${v}</div>
+            </div>`).join("")}
+        </div>
+      </div>
+      <div class="src-card-link">
+        <a href="${s.url}" target="_blank" rel="noopener">원본<br>바로가기</a>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ═══════════ 렌더 ═══════════ */
+function renderAll(){
+  renderKpis();
+  renderSrcStatus();
+  renderDist();
+  renderWaffle();
+  drawTrend();
+  renderFilters();
+  renderTable();
+  renderStats();
+  renderChanges();
+  renderSources();
+  $("#foot-stamp").textContent =
+    "최종 수집 " + DATA.meta.generated_at.slice(0, 10).replaceAll("-", ".") + ". " + DATA.meta.generated_at.slice(11, 16) + " KST";
+  if(document.documentElement.classList.contains("dark")) $("#dark-icon").setAttribute("data-lucide", "sun");
+  lucide.createIcons();
+}
+$("#q").addEventListener("input", e => { state.q = e.target.value; renderTable(); });
+loadData();
+
+/* PWA */
+/* 배포 경로가 /{계정}/{저장소}/ 하위이므로 절대경로('/sw.js')를 쓰면 404가 납니다. */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
