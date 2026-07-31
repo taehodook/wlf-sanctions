@@ -169,12 +169,6 @@
   ]
  ],
  "cross": {
-  "OFAC": {
-   "Entity": 9835,
-   "Individual": 7472,
-   "Vessel": 1524,
-   "Aircraft": 344
-  },
   "UNSC": {
    "Individual": 736,
    "Entity": 275
@@ -186,6 +180,12 @@
   "KoFIU": {
    "Entity": 466,
    "Individual": 598
+  },
+  "OFAC": {
+   "Entity": 9835,
+   "Individual": 7472,
+   "Vessel": 1524,
+   "Aircraft": 344
   }
  },
  "by_year": [
@@ -327,6 +327,16 @@
     "UNSC": 1011,
     "EU": 6017,
     "KoFIU": 1064
+   }
+  ],
+  [
+   "2026-07-31",
+   27267,
+   {
+    "UNSC": 1011,
+    "EU": 6017,
+    "KoFIU": 1064,
+    "OFAC": 19175
    }
   ]
  ]
