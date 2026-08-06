@@ -1,5 +1,24 @@
 [
  {
+  "date": "2026-08-06",
+  "added": 9,
+  "removed": 17,
+  "modified": 2385,
+  "total": 27486,
+  "by_source": {
+   "EU": {
+    "added": 9,
+    "removed": 14,
+    "modified": 2380
+   },
+   "OFAC": {
+    "added": 0,
+    "removed": 3,
+    "modified": 5
+   }
+  }
+ },
+ {
   "date": "2026-08-05",
   "added": 0,
   "removed": 0,
