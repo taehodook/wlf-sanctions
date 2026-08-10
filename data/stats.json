@@ -1,5 +1,5 @@
 {
- "total": 27507,
+ "total": 27508,
  "by_source": [
   [
    "OFAC",
@@ -11,7 +11,7 @@
   ],
   [
    "KoFIU",
-   1063
+   1064
   ],
   [
    "UNSC",
@@ -21,7 +21,7 @@
  "by_type": [
   [
    "Individual",
-   13274
+   13275
   ],
   [
    "Entity",
@@ -184,8 +184,8 @@
    "Entity": 1772
   },
   "KoFIU": {
-   "Individual": 597,
-   "Entity": 466
+   "Entity": 466,
+   "Individual": 598
   }
  },
  "by_year": [
@@ -259,7 +259,7 @@
   ],
   [
    "2017",
-   425
+   426
   ],
   [
    "2018",
@@ -304,8 +304,8 @@
    "KoFIU",
    "UNSC"
   ],
-  "covered": 7902,
-  "total": 27507
+  "covered": 7903,
+  "total": 27508
  },
  "dob_known_ratio": 0.9288,
  "trend": [
@@ -427,6 +427,16 @@
     "UNSC": 1011,
     "EU": 6234,
     "KoFIU": 1063
+   }
+  ],
+  [
+   "2026-08-10",
+   27508,
+   {
+    "OFAC": 19199,
+    "UNSC": 1011,
+    "EU": 6234,
+    "KoFIU": 1064
    }
   ]
  ]
