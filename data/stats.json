@@ -1,9 +1,9 @@
 {
- "total": 27511,
+ "total": 27557,
  "by_source": [
   [
    "OFAC",
-   19202
+   19249
   ],
   [
    "EU",
@@ -11,7 +11,7 @@
   ],
   [
    "KoFIU",
-   1064
+   1063
   ],
   [
    "UNSC",
@@ -21,15 +21,15 @@
  "by_type": [
   [
    "Individual",
-   13277
+   13297
   ],
   [
    "Entity",
-   12368
+   12384
   ],
   [
    "Vessel",
-   1524
+   1534
   ],
   [
    "Aircraft",
@@ -43,7 +43,7 @@
   ],
   [
    "이란",
-   985
+   987
   ],
   [
    "멕시코",
@@ -129,7 +129,7 @@
   ],
   [
    "SDGT",
-   2164
+   2171
   ],
   [
    "SDNTK",
@@ -148,16 +148,16 @@
    707
   ],
   [
+   "ILLICIT-DRUGS-EO14059",
+   476
+  ],
+  [
    "IRAN",
    473
   ],
   [
    "IRAN-EO13846",
    463
-  ],
-  [
-   "ILLICIT-DRUGS-EO14059",
-   454
   ],
   [
    "RUSSIA-EO14024,UKRAINE-EO13662",
@@ -170,9 +170,9 @@
  ],
  "cross": {
   "OFAC": {
-   "Entity": 9855,
-   "Individual": 7481,
-   "Vessel": 1524,
+   "Entity": 9871,
+   "Individual": 7502,
+   "Vessel": 1534,
    "Aircraft": 342
   },
   "UNSC": {
@@ -184,8 +184,8 @@
    "Entity": 1772
   },
   "KoFIU": {
-   "Entity": 466,
-   "Individual": 598
+   "Individual": 597,
+   "Entity": 466
   }
  },
  "by_year": [
@@ -259,7 +259,7 @@
   ],
   [
    "2017",
-   426
+   425
   ],
   [
    "2018",
@@ -304,10 +304,10 @@
    "KoFIU",
    "UNSC"
   ],
-  "covered": 7903,
-  "total": 27511
+  "covered": 7902,
+  "total": 27557
  },
- "dob_known_ratio": 0.9288,
+ "dob_known_ratio": 0.9289,
  "trend": [
   [
    "2026-07-29",
@@ -537,6 +537,16 @@
     "UNSC": 1011,
     "EU": 6234,
     "KoFIU": 1064
+   }
+  ],
+  [
+   "2026-08-21",
+   27557,
+   {
+    "OFAC": 19249,
+    "UNSC": 1011,
+    "EU": 6234,
+    "KoFIU": 1063
    }
   ]
  ]
