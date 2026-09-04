@@ -1,9 +1,9 @@
 {
- "total": 27630,
+ "total": 27635,
  "by_source": [
   [
    "OFAC",
-   19321
+   19326
   ],
   [
    "EU",
@@ -21,11 +21,11 @@
  "by_type": [
   [
    "Individual",
-   13313
+   13314
   ],
   [
    "Entity",
-   12435
+   12439
   ],
   [
    "Vessel",
@@ -121,7 +121,7 @@
  "top_programs": [
   [
    "RUSSIA-EO14024",
-   5669
+   5668
   ],
   [
    "UKR",
@@ -170,8 +170,8 @@
  ],
  "cross": {
   "OFAC": {
-   "Entity": 9922,
-   "Individual": 7517,
+   "Entity": 9926,
+   "Individual": 7518,
    "Vessel": 1540,
    "Aircraft": 342
   },
@@ -305,7 +305,7 @@
    "UNSC"
   ],
   "covered": 7903,
-  "total": 27630
+  "total": 27635
  },
  "dob_known_ratio": 0.929,
  "trend": [
@@ -674,6 +674,16 @@
    27630,
    {
     "OFAC": 19321,
+    "UNSC": 1011,
+    "EU": 6234,
+    "KoFIU": 1064
+   }
+  ],
+  [
+   "2026-09-04",
+   27635,
+   {
+    "OFAC": 19326,
     "UNSC": 1011,
     "EU": 6234,
     "KoFIU": 1064
