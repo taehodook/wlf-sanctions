@@ -1,9 +1,9 @@
 {
- "total": 27709,
+ "total": 27707,
  "by_source": [
   [
    "OFAC",
-   19393
+   19391
   ],
   [
    "EU",
@@ -21,11 +21,11 @@
  "by_type": [
   [
    "Individual",
-   13334
+   13333
   ],
   [
    "Entity",
-   12493
+   12492
   ],
   [
    "Vessel",
@@ -115,7 +115,7 @@
   ],
   [
    "콩고민주공화국",
-   91
+   90
   ]
  ],
  "top_programs": [
@@ -170,8 +170,8 @@
  ],
  "cross": {
   "OFAC": {
-   "Entity": 9976,
-   "Individual": 7535,
+   "Entity": 9975,
+   "Individual": 7534,
    "Vessel": 1540,
    "Aircraft": 342
   },
@@ -305,9 +305,9 @@
    "UNSC"
   ],
   "covered": 7910,
-  "total": 27709
+  "total": 27707
  },
- "dob_known_ratio": 0.9294,
+ "dob_known_ratio": 0.9293,
  "trend": [
   [
    "2026-07-29",
@@ -874,6 +874,16 @@
    27709,
    {
     "OFAC": 19393,
+    "UNSC": 1011,
+    "EU": 6241,
+    "KoFIU": 1064
+   }
+  ],
+  [
+   "2026-09-24",
+   27707,
+   {
+    "OFAC": 19391,
     "UNSC": 1011,
     "EU": 6241,
     "KoFIU": 1064
