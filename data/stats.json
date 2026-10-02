@@ -1,9 +1,9 @@
 {
- "total": 27768,
+ "total": 27799,
  "by_source": [
   [
    "OFAC",
-   19452
+   19483
   ],
   [
    "EU",
@@ -21,11 +21,11 @@
  "by_type": [
   [
    "Individual",
-   13364
+   13366
   ],
   [
    "Entity",
-   12523
+   12552
   ],
   [
    "Vessel",
@@ -43,7 +43,7 @@
   ],
   [
    "이란",
-   1004
+   1006
   ],
   [
    "멕시코",
@@ -137,7 +137,7 @@
   ],
   [
    "IRAN-EO13902",
-   920
+   942
   ],
   [
    "GLOMAG",
@@ -170,8 +170,8 @@
  ],
  "cross": {
   "OFAC": {
-   "Entity": 10006,
-   "Individual": 7565,
+   "Entity": 10035,
+   "Individual": 7567,
    "Vessel": 1539,
    "Aircraft": 342
   },
@@ -179,13 +179,13 @@
    "Individual": 736,
    "Entity": 275
   },
-  "EU": {
-   "Individual": 4465,
-   "Entity": 1776
-  },
   "KoFIU": {
    "Entity": 466,
    "Individual": 598
+  },
+  "EU": {
+   "Individual": 4465,
+   "Entity": 1776
   }
  },
  "by_year": [
@@ -305,7 +305,7 @@
    "UNSC"
   ],
   "covered": 7910,
-  "total": 27768
+  "total": 27799
  },
  "dob_known_ratio": 0.9295,
  "trend": [
@@ -957,6 +957,16 @@
     "UNSC": 1011,
     "EU": 6241,
     "KoFIU": 1064
+   }
+  ],
+  [
+   "2026-10-02",
+   27799,
+   {
+    "OFAC": 19483,
+    "UNSC": 1011,
+    "KoFIU": 1064,
+    "EU": 6241
    }
   ]
  ]
