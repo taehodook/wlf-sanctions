@@ -1,9 +1,9 @@
 {
- "total": 27799,
+ "total": 27804,
  "by_source": [
   [
    "OFAC",
-   19483
+   19488
   ],
   [
    "EU",
@@ -21,11 +21,11 @@
  "by_type": [
   [
    "Individual",
-   13366
+   13369
   ],
   [
    "Entity",
-   12552
+   12554
   ],
   [
    "Vessel",
@@ -129,7 +129,7 @@
   ],
   [
    "SDGT",
-   2180
+   2185
   ],
   [
    "SDNTK",
@@ -170,8 +170,8 @@
  ],
  "cross": {
   "OFAC": {
-   "Entity": 10035,
-   "Individual": 7567,
+   "Entity": 10037,
+   "Individual": 7570,
    "Vessel": 1539,
    "Aircraft": 342
   },
@@ -179,13 +179,13 @@
    "Individual": 736,
    "Entity": 275
   },
-  "KoFIU": {
-   "Entity": 466,
-   "Individual": 598
-  },
   "EU": {
    "Individual": 4465,
    "Entity": 1776
+  },
+  "KoFIU": {
+   "Entity": 466,
+   "Individual": 598
   }
  },
  "by_year": [
@@ -305,7 +305,7 @@
    "UNSC"
   ],
   "covered": 7910,
-  "total": 27799
+  "total": 27804
  },
  "dob_known_ratio": 0.9295,
  "trend": [
@@ -967,6 +967,16 @@
     "UNSC": 1011,
     "KoFIU": 1064,
     "EU": 6241
+   }
+  ],
+  [
+   "2026-10-03",
+   27804,
+   {
+    "OFAC": 19488,
+    "UNSC": 1011,
+    "EU": 6241,
+    "KoFIU": 1064
    }
   ]
  ]
