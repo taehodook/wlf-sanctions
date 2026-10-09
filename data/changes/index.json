@@ -1,5 +1,19 @@
 [
  {
+  "date": "2026-10-09",
+  "added": 55,
+  "removed": 2,
+  "modified": 0,
+  "total": 27731,
+  "by_source": {
+   "OFAC": {
+    "added": 55,
+    "removed": 2,
+    "modified": 0
+   }
+  }
+ },
+ {
   "date": "2026-10-08",
   "added": 0,
   "removed": 0,
