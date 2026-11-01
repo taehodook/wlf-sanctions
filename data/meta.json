@@ -1,6 +1,6 @@
 {
- "generated_at": "2026-10-31T11:52:22+09:00",
- "generated_at_kst": "2026.10.31. 11:52",
+ "generated_at": "2026-11-01T11:45:25+09:00",
+ "generated_at_kst": "2026.11.01. 11:45",
  "total": 27824,
  "by_source": {
   "OFAC": 19484,
@@ -20,25 +20,25 @@
   {
    "code": "OFAC",
    "count": 19484,
-   "collected_at": "2026-10-31",
+   "collected_at": "2026-11-01",
    "stale": false
   },
   {
    "code": "EU",
    "count": 6269,
-   "collected_at": "2026-10-31",
+   "collected_at": "2026-11-01",
    "stale": false
   },
   {
    "code": "UNSC",
    "count": 1007,
-   "collected_at": "2026-10-31",
+   "collected_at": "2026-11-01",
    "stale": false
   },
   {
    "code": "KoFIU",
    "count": 1064,
-   "collected_at": "2026-10-31",
+   "collected_at": "2026-11-01",
    "stale": false
   }
  ],
