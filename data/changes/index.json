@@ -1,5 +1,19 @@
 [
  {
+  "date": "2026-11-26",
+  "added": 1,
+  "removed": 0,
+  "modified": 0,
+  "total": 28004,
+  "by_source": {
+   "UNSC": {
+    "added": 1,
+    "removed": 0,
+    "modified": 0
+   }
+  }
+ },
+ {
   "date": "2026-11-25",
   "added": 0,
   "removed": 0,

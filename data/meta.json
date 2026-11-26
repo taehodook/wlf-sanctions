@@ -1,47 +1,45 @@
 {
- "generated_at": "2026-11-25T14:46:02+09:00",
- "generated_at_kst": "2026.11.25. 14:46",
- "total": 28002,
+ "generated_at": "2026-11-26T14:37:19+09:00",
+ "generated_at_kst": "2026.11.26. 14:37",
+ "total": 28004,
  "by_source": {
   "OFAC": 19629,
-  "UNSC": 1007,
+  "UNSC": 1008,
   "EU": 6303,
-  "KoFIU": 1063
+  "KoFIU": 1064
  },
- "stale_sources": [
-  "KoFIU"
- ],
+ "stale_sources": [],
  "last_change": {
-  "added": 0,
+  "added": 1,
   "removed": 0,
   "modified": 0,
   "total_before": 28002,
-  "total_after": 28002
+  "total_after": 28004
  },
  "source_status": [
   {
    "code": "OFAC",
    "count": 19629,
-   "collected_at": "2026-11-25",
+   "collected_at": "2026-11-26",
    "stale": false
   },
   {
    "code": "EU",
    "count": 6303,
-   "collected_at": "2026-11-25",
+   "collected_at": "2026-11-26",
    "stale": false
   },
   {
    "code": "UNSC",
-   "count": 1007,
-   "collected_at": "2026-11-25",
+   "count": 1008,
+   "collected_at": "2026-11-26",
    "stale": false
   },
   {
    "code": "KoFIU",
-   "count": 1063,
-   "collected_at": "2026-11-24",
-   "stale": true
+   "count": 1064,
+   "collected_at": "2026-11-26",
+   "stale": false
   }
  ],
  "sources": [
