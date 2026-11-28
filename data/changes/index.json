@@ -1,5 +1,19 @@
 [
  {
+  "date": "2026-11-28",
+  "added": 2,
+  "removed": 4,
+  "modified": 2214,
+  "total": 28004,
+  "by_source": {
+   "EU": {
+    "added": 2,
+    "removed": 4,
+    "modified": 2214
+   }
+  }
+ },
+ {
   "date": "2026-11-27",
   "added": 11,
   "removed": 9,
